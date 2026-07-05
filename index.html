@@ -163,26 +163,32 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 20px;
+            align-items: center;
         }
 
         @media(min-width: 768px) {
-            .game-main { grid-template-columns: 1.2fr 0.8fr; }
+            .game-main { grid-template-columns: 1fr 1fr; }
         }
 
-        /* CONTENEDOR DE IMÁGENES COMPATIBLE CON TUS FOTOS TRASPASADAS */
+        /* CONTENEDOR DE IMÁGENES ADAPTADO PARA CAPTURAS VERTICALES */
         .image-frame {
             width: 100%;
-            height: 220px;
+            max-height: 450px;
             border-radius: 10px;
             overflow: hidden;
             border: 2px solid var(--labyrinth-gold);
             background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .image-frame img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 450px;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* Cambiado a contain para evitar recortes */
         }
 
         /* EL RELOJMÍSTICO DE PREGUNTA */
@@ -234,7 +240,7 @@
 <div class="game-container" id="main-frame">
 
     <div id="screen-welcome" class="screen active">
-	<h1>Dentro del Laberinto: <br>El Duelo de las Tablas</h1>
+        <h1>Dentro del Laberinto: <br>El Duelo de las Tablas</h1>
         
         <div class="image-frame">
             <img src="resources/IMG_3695.jpg" alt="Portada del Laberinto">
@@ -279,8 +285,8 @@
         </div>
 
         <button class="btn-lab" onclick="startMaze()">¡Entrar al Laberinto!</button><br>
- <hr>
-  <p style="text-align: center;">Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a></p>  
+        <hr>
+        <p style="text-align: center;">Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a></p>  
     </div>
 
     <div id="screen-game" class="screen">
@@ -301,7 +307,7 @@
             </div>
             
             <div style="text-align: center;">
-                <div class="image-frame" style="height: 180px;">
+                <div class="image-frame">
                     <img id="dynamic-game-img" src="" alt="Escenario">
                 </div>
                 <p id="game-caption" style="font-family: 'Great Vibes', cursive; font-size: 1.6rem; color: var(--muted-text); margin-top: 10px;"></p>
@@ -507,4 +513,4 @@
 </script>
 
 </body>
-</html> 
+</html>
