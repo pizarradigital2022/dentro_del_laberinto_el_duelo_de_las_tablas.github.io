@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentro del Laberinto: El Duelo de las Tablas</title>
+    <link rel="icon" type="image/x-icon" href="./resources/favicon.ico">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Great+Vibes&display=swap');
+
+        :root {
+            --stone-bg: #0d0d16; 
+            --labyrinth-gold: #d4af37; 
+            --text-color: #ffffff;
+            --muted-text: #a49cb3;
+            --success-color: #2ed573;
+            --error-color: #ff4757;
+            
+            /* Colores de Turno */
+            --color-team1: #3a86ff; /* Azul para Sarah */
+            --color-team2: #ff0055; /* Rojo para Jareth */
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--stone-bg);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(15, 15, 30, 0.9), var(--stone-bg)),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3%3E");
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* EL CONTENEDOR PRINCIPAL CAMBIA DE COLOR CON TRANSICIÓN */
+        .game-container {
+            background-color: rgba(18, 15, 28, 0.95);
+            border: 4px solid var(--labyrinth-gold);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 850px;
+            width: 100%;
+            box-shadow: 0 0 35px rgba(212, 175, 55, 0.3);
+            box-sizing: border-box;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        /* Clases dinámicas aplicadas por JavaScript según el turno */
+        .game-container.turn-team1 {
+            border-color: var(--color-team1);
+            box-shadow: 0 0 40px rgba(58, 134, 255, 0.5);
+        }
+
+        .game-container.turn-team2 {
+            border-color: var(--color-team2);
+            box-shadow: 0 0 40px rgba(255, 0, 85, 0.5);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--labyrinth-gold);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0;
+        }
+
+        h1 { font-size: 2.4rem; border-bottom: 2px solid var(--labyrinth-gold); padding-bottom: 12px; }
+
+        .screen { display: none; }
+        .active { display: block; }
+
+        .rules-panel {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-left: 5px solid var(--labyrinth-gold);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .rules-title {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.6rem;
+            color: var(--labyrinth-gold);
+            text-align: left;
+            margin: 0 0 5px 0;
+            text-transform: none;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        @media(min-width: 600px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+        }
+
+        .form-group label {
+            font-family: 'Cinzel', serif;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--labyrinth-gold);
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            background: #080511;
+            border: 2px solid var(--labyrinth-gold);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        button.btn-lab {
+            width: 100%;
+            background: linear-gradient(135deg, #e6c65b 0%, #d4af37 100%);
+            color: #000;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            border: none;
+            padding: 16px;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        /* HUD PANTALLA DE JUEGO */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #05030a;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Cinzel', serif;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .turn-box {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .game-main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .game-main { grid-template-columns: 1.2fr 0.8fr; }
+        }
+
+        /* CONTENEDOR DE IMÁGENES COMPATIBLE CON TUS FOTOS TRASPASADAS */
+        .image-frame {
+            width: 100%;
+            height: 220px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--labyrinth-gold);
+            background: #000;
+        }
+
+        .image-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* EL RELOJMÍSTICO DE PREGUNTA */
+        .timer-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 15px;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--success-color);
+            transition: width 0.1s linear, background-color 0.3s ease;
+        }
+
+        .question-display {
+            font-family: 'Cinzel', serif;
+            font-size: 4.5rem;
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        /* GRÁFICOS FINALES */
+        .chart { margin: 25px 0; }
+        .bar-wrap { margin-bottom: 15px; }
+        .bar-track { background: #05030a; border-radius: 20px; height: 35px; border: 1px solid rgba(255,255,255,0.2); overflow: hidden; }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--color-team1);
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            box-sizing: border-box;
+            font-weight: bold;
+            transition: width 1s ease-out;
+        }
+        .bar-fill.t2 { background: var(--color-team2); }
+    </style>
+</head>
+<body>
+
+<div class="game-container" id="main-frame">
+
+    <div id="screen-welcome" class="screen active">
+	<h1>Dentro del Laberinto: <br>El Duelo de las Tablas</h1>
+        
+        <div class="image-frame">
+            <img src="resources/IMG_3695.jpg" alt="Portada del Laberinto">
+        </div>
+
+        <div class="rules-panel">
+            <h2 class="rules-title">⚔️ Sir Didymus Proclama:</h2>
+            <p>¡Alto! Las operaciones se barajan mágicamente de forma <strong>aleatoria</strong>. Responde antes de que tu barra mística de tiempo expire (puedes tanto pulsar <strong>Intro</strong> como el botón "<strong>Responder</strong>").</p>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Nombre Equipo 1 (Azul):</label>
+                <input type="text" id="input-t1" value="Escuadra de Sarah">
+            </div>
+            <div class="form-group">
+                <label>Nombre Equipo 2 (Rojo):</label>
+                <input type="text" id="input-t2" value="Ejército Goblin">
+            </div>
+        </div>
+
+        <div class="form-grid form-grid-3">
+            <div class="form-group">
+                <label>Dificultad del Laberinto:</label>
+                <select id="select-difficulty">
+                    <option value="easy" selected>Modo Principiante (Tablas del 1 al 10)</option>
+                    <option value="advanced">Modo Avanzado (Tablas del 2 al 9)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tiempo de Juego Total:</label>
+                <select id="select-global-time">
+                    <option value="60" selected>60 Segundos</option>
+                    <option value="120">2 Minutos</option>
+                    <option value="180">3 Minutos</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tiempo por pregunta (seg.):</label>
+                <input type="number" id="input-q-time" value="10">
+            </div>
+        </div>
+
+        <button class="btn-lab" onclick="startMaze()">¡Entrar al Laberinto!</button><br>
+ <hr>
+  <p style="text-align: center;">Autor: Joaquín Candañedo.<br><a href="https://creativecommons.org/licenses/by-sa/4.0/"><img src="./resources/CC_BY_SA.png" alt="Creative Commons Reconocimiento - Compartir Igual"></a></p>  
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div class="hud">
+            <div>⏱️ Total: <span id="hud-global-timer">00</span>s</div>
+            <div class="turn-box" id="hud-turn-badge">Equipo</div>
+            <div>Puntos: <span id="hud-score-t1">0</span> - <span id="hud-score-t2">0</span></div>
+        </div>
+
+        <div class="game-main">
+            <div>
+                <div class="timer-container">
+                    <div class="timer-bar" id="hud-timer-bar"></div>
+                </div>
+                <div class="question-display" id="display-question">0 x 0</div>
+                <input type="number" id="player-answer" style="font-size: 2.5rem; height: 70px;" placeholder="?" onkeypress="checkKey(event)">
+                <button class="btn-lab" onclick="processAction()">Responder</button>
+            </div>
+            
+            <div style="text-align: center;">
+                <div class="image-frame" style="height: 180px;">
+                    <img id="dynamic-game-img" src="" alt="Escenario">
+                </div>
+                <p id="game-caption" style="font-family: 'Great Vibes', cursive; font-size: 1.6rem; color: var(--muted-text); margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-results" class="screen">
+        <h2>✨ Destino Final ✨</h2>
+        <h1 id="txt-winner">¡Ganador!</h1>
+
+        <div class="image-frame">
+            <img src="resources/IMG_3697.jpg" alt="Castillo Final">
+        </div>
+
+        <h3>Estadísticas de Aciertos</h3>
+        
+        <div class="chart">
+            <div class="bar-wrap">
+                <div class="bar-name" id="lbl-chart-t1">Equipo 1</div>
+                <div class="bar-track">
+                    <div class="bar-fill" id="bar-fill-t1">0 Ptos</div>
+                </div>
+            </div>
+            <div class="bar-wrap">
+                <div class="bar-name" id="lbl-chart-t2">Equipo 2</div>
+                <div class="bar-track">
+                    <div class="bar-fill t2" id="bar-fill-t2">0 Ptos</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-lab" onclick="resetMaze()">Reiniciar Laberinto</button>
+    </div>
+
+</div>
+
+<script>
+    // RUTAS ACTUALIZADAS PARA EL DIRECTORIO /RESOURCES/
+    const localImages = {
+        welcome: "resources/IMG_3695.jpg", 
+        team1: "resources/IMG_3699.jpg",   
+        team2: "resources/IMG_3700.jpg",   
+        end: "resources/IMG_3697.jpg"      
+    };
+
+    let db = {
+        t1Name: "", t2Name: "", t1Score: 0, t2Score: 0,
+        gTime: 0, qTimeMax: 0, qTimeLeft: 0,
+        active: 1, sol: 0, difficulty: "easy",
+        loopGlobal: null, loopQuestion: null
+    };
+
+    function show(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function checkKey(e) {
+        if (e.key === 'Enter') processAction();
+    }
+
+    function startMaze() {
+        db.t1Name = document.getElementById('input-t1').value || "Sarah";
+        db.t2Name = document.getElementById('input-t2').value || "Jareth";
+        db.gTime = parseInt(document.getElementById('select-global-time').value);
+        db.qTimeMax = parseInt(document.getElementById('input-q-time').value) || 10;
+        db.difficulty = document.getElementById('select-difficulty').value;
+
+        db.t1Score = 0; db.t2Score = 0; db.active = 1;
+
+        document.getElementById('hud-score-t1').innerText = "0";
+        document.getElementById('hud-score-t2').innerText = "0";
+        document.getElementById('hud-global-timer').innerText = db.gTime;
+
+        show('screen-game');
+        
+        db.loopGlobal = setInterval(() => {
+            db.gTime--;
+            document.getElementById('hud-global-timer').innerText = db.gTime;
+            if (db.gTime <= 0) finishMaze();
+        }, 1000);
+
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        if (db.gTime <= 0) return;
+
+        const mainContainer = document.getElementById('main-frame');
+        const badge = document.getElementById('hud-turn-badge');
+        const imgElement = document.getElementById('dynamic-game-img');
+
+        // ASIGNACIÓN CORRECTA DE IMÁGENES AL EQUIPO ACTIVO
+        if (db.active === 1) {
+            mainContainer.className = "game-container turn-team1";
+            badge.innerText = db.t1Name;
+            badge.style.backgroundColor = "var(--color-team1)";
+            imgElement.src = localImages.team1; // Carga la imagen asignada al Equipo 1
+            document.getElementById('game-caption').innerText = "Sarah busca una salida...";
+        } else {
+            mainContainer.className = "game-container turn-team2";
+            badge.innerText = db.t2Name;
+            badge.style.backgroundColor = "var(--color-team2)";
+            imgElement.src = localImages.team2; // Carga la imagen asignada al Equipo 2
+            document.getElementById('game-caption').innerText = "¡Los Goblins manipulan el camino!";
+        }
+
+        let n1, n2;
+        if (db.difficulty === "easy") {
+            n1 = Math.floor(Math.random() * 10) + 1; 
+            n2 = Math.floor(Math.random() * 10) + 1; 
+        } else {
+            n1 = Math.floor(Math.random() * 8) + 2; 
+            n2 = Math.floor(Math.random() * 8) + 2; 
+        }
+        db.sol = n1 * n2;
+
+        document.getElementById('display-question').innerText = `${n1} x ${n2}`;
+        document.getElementById('player-answer').value = "";
+        document.getElementById('player-answer').focus();
+
+        clearInterval(db.loopQuestion);
+        db.qTimeLeft = db.qTimeMax;
+        updateBar(100);
+
+        db.loopQuestion = setInterval(() => {
+            db.qTimeLeft -= 0.1;
+            let pct = (db.qTimeLeft / db.qTimeMax) * 100;
+            updateBar(pct);
+
+            if (db.qTimeLeft <= 0) {
+                shiftTurn();
+                nextQuestion();
+            }
+        }, 100);
+    }
+
+    function updateBar(pct) {
+        const bar = document.getElementById('hud-timer-bar');
+        bar.style.width = pct > 0 ? `${pct}%` : "0%";
+        
+        if(pct < 30) {
+            bar.style.backgroundColor = "var(--error-color)";
+        } else {
+            bar.style.backgroundColor = "var(--success-color)";
+        }
+    }
+
+    function processAction() {
+        const val = parseInt(document.getElementById('player-answer').value);
+        if (isNaN(val)) return;
+
+        if (val === db.sol) {
+            if (db.active === 1) db.t1Score++;
+            else db.t2Score++;
+            
+            document.getElementById('hud-score-t1').innerText = db.t1Score;
+            document.getElementById('hud-score-t2').innerText = db.t2Score;
+        }
+
+        shiftTurn();
+        nextQuestion();
+    }
+
+    function shiftTurn() {
+        db.active = db.active === 1 ? 2 : 1;
+    }
+
+    function finishMaze() {
+        clearInterval(db.loopGlobal);
+        clearInterval(db.loopQuestion);
+
+        document.getElementById('main-frame').className = "game-container";
+
+        let finalMsg = "";
+        if (db.t1Score > db.t2Score) finalMsg = `¡${db.t1Name} ha salvado el Laberinto! 🌟`;
+        else if (db.t2Score > db.t1Score) finalMsg = `¡Victoria para el Rey Goblin (${db.t2Name})! 👑`;
+        else finalMsg = "¡Las dimensiones se han equilibrado! Empate místico 🤝";
+
+        document.getElementById('txt-winner').innerText = finalMsg;
+        document.getElementById('lbl-chart-t1').innerText = db.t1Name;
+        document.getElementById('lbl-chart-t2').innerText = db.t2Name;
+
+        const total = db.t1Score + db.t2Score || 1;
+        const fill1 = document.getElementById('bar-fill-t1');
+        const fill2 = document.getElementById('bar-fill-t2');
+
+        fill1.innerText = `${db.t1Score} Aciertos`;
+        fill2.innerText = `${db.t2Score} Aciertos`;
+
+        setTimeout(() => {
+            fill1.style.width = db.t1Score > 0 ? `${Math.round((db.t1Score/total)*100)}%` : "15%";
+            fill2.style.width = db.t2Score > 0 ? `${Math.round((db.t2Score/total)*100)}%` : "15%";
+        }, 150);
+
+        show('screen-results');
+    }
+
+    function resetMaze() {
+        show('screen-welcome');
+    }
+</script>
+
+</body>
+</html> 
