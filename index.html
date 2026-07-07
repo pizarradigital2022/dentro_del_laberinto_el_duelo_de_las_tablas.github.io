@@ -24,9 +24,14 @@
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--stone-bg);
+            /* IMAGEN DE FONDO CONFIGURADA */
             background-image: 
-                radial-gradient(circle at 50% 50%, rgba(15, 15, 30, 0.9), var(--stone-bg)),
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3%3C/filter%3%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3%3C/svg%3%3E");
+                radial-gradient(circle at 50% 50%, rgba(15, 15, 30, 0.4), rgba(13, 13, 22, 0.85)),
+                url("resources/el_laberinto.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* Mantiene el fondo estático al hacer scroll */
             color: var(--text-color);
             margin: 0;
             padding: 15px;
@@ -188,7 +193,7 @@
             max-height: 450px;
             width: auto;
             height: auto;
-            object-fit: contain; /* Cambiado a contain para evitar recortes */
+            object-fit: contain;
         }
 
         /* EL RELOJMÍSTICO DE PREGUNTA */
@@ -346,7 +351,6 @@
 </div>
 
 <script>
-    // RUTAS ACTUALIZADAS PARA EL DIRECTORIO /RESOURCES/
     const localImages = {
         welcome: "resources/IMG_3695.jpg", 
         team1: "resources/IMG_3699.jpg",   
@@ -401,18 +405,17 @@
         const badge = document.getElementById('hud-turn-badge');
         const imgElement = document.getElementById('dynamic-game-img');
 
-        // ASIGNACIÓN CORRECTA DE IMÁGENES AL EQUIPO ACTIVO
         if (db.active === 1) {
             mainContainer.className = "game-container turn-team1";
             badge.innerText = db.t1Name;
             badge.style.backgroundColor = "var(--color-team1)";
-            imgElement.src = localImages.team1; // Carga la imagen asignada al Equipo 1
+            imgElement.src = localImages.team1; 
             document.getElementById('game-caption').innerText = "Sarah busca una salida...";
         } else {
             mainContainer.className = "game-container turn-team2";
             badge.innerText = db.t2Name;
             badge.style.backgroundColor = "var(--color-team2)";
-            imgElement.src = localImages.team2; // Carga la imagen asignada al Equipo 2
+            imgElement.src = localImages.team2; 
             document.getElementById('game-caption').innerText = "¡Los Goblins manipulan el camino!";
         }
 
